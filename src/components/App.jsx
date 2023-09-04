@@ -4,7 +4,7 @@ import { Searchbar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
 import { ImageGalleryItem } from './ImageGalleryItem';
 import { Loader } from './Loader';
-import { MyModal } from './Modal';
+import { Modal } from './Modal';
 import { Button } from './Button';
 import { fetchImagesByQuery } from './FetchImage';
 import toast, { Toaster } from 'react-hot-toast';
@@ -102,6 +102,7 @@ export class App extends Component {
           })}
         {images.length > 0 && (
           <ImageGallery>
+       
             {images.map(image => (
               <ImageGalleryItem
                 key={image.id}
@@ -111,17 +112,17 @@ export class App extends Component {
                 className={css.ImageGalleryItem}
               />
             ))}
+            {showModal && (
+              <Modal
+                src={modalImage}
+                alt={modalImage.tags}
+                onClose={this.closeModal}
+              />
+            )}
           </ImageGallery>
         )}
         {images.length > 0 && !isLoading && lastPage > 1 && (
           <Button addLoadMore={this.handleLoadMore} />
-        )}
-        {showModal && (
-          <MyModal
-            src={modalImage.largeImageURL}
-            alt={modalImage.tags}
-            onClose={this.closeModal}
-          />
         )}
         <Toaster position="top-right" />
       </div>

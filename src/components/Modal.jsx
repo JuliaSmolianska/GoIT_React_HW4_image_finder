@@ -1,52 +1,12 @@
-import React, { Component } from 'react';
-import Modal from 'react-modal';
+import React from 'react';
+import css from './App.module.css';
 
-Modal.setAppElement('#root');
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-  },
+export const Modal = ({ src, alt, onClose }) => {
+  return (
+    <div className={css.modalBackdrop} onClick={onClose}>
+      <div className={css.modalContent}>
+        <img src={src} alt={alt} className={css.modalImage} />
+      </div>
+    </div>
+  );
 };
-
-export class MyModal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
-
-  handleKeyDown = e => {
-    if (e.code === 'Escape') {
-      this.props.onClose();
-    }
-  };
-  handleOverlayClick = e => {
-    if (e.target === e.currentTarget) {
-      this.props.onClose();
-    }
-  };
-
-  render() {
-    const { src, alt, showModal } = this.props;
-    return (
-      <Modal
-        isOpen={showModal}
-        onRequestClose={this.props.closeModal}
-        style={customStyles}
-      >
-        <div className="overlay" onClick={this.handleOverlayClick}>
-          <div className="modal">
-            <img src={src} alt={alt} />
-          </div>
-        </div>
-      </Modal>
-    );
-  }
-}
