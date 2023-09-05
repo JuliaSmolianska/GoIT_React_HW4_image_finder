@@ -2,11 +2,9 @@ import React, { Component } from 'react';
 import css from './App.module.css';
 import { Searchbar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
-import { ImageGalleryItem } from './ImageGalleryItem';
 import { Loader } from './Loader';
-import { Modal } from './Modal';
 import { Button } from './Button';
-import { fetchImagesByQuery } from './FetchImage';
+import { fetchImagesByQuery } from '../FetchImage';
 import toast, { Toaster } from 'react-hot-toast';
 
 export class App extends Component {
@@ -63,12 +61,19 @@ export class App extends Component {
   handleSearchSubmit = evt => {
     evt.preventDefault();
     const queryValue = evt.target.elements.query.value.trim();
-    const query = `${Date.now()}/${queryValue}`;
-    this.setState({
-      query: query,
-      images: [],
-      page: 1,
-    });
+    if (queryValue !== '') {
+      const query = `${Date.now()}/${queryValue}`;
+      this.setState({
+        query: query,
+        images: [],
+        page: 1,
+      });
+    } else {
+      toast('Please enter your query', {
+        duration: 2000,
+        position: 'top-center',
+      });
+    }
   };
 
   handleLoadMore = () => {
@@ -78,7 +83,6 @@ export class App extends Component {
   };
 
   openModal = image => {
-    console.log('openModal called with image:', image);
     this.setState({ showModal: true, modalImage: image });
   };
 
@@ -101,25 +105,13 @@ export class App extends Component {
             duration: 5000,
           })}
         {images.length > 0 && (
-          <ImageGallery>
-       
-            {images.map(image => (
-              <ImageGalleryItem
-                key={image.id}
-                src={image.webformatURL}
-                alt={image.tags}
-                onClick={() => this.openModal(image.largeImageURL)}
-                className={css.ImageGalleryItem}
-              />
-            ))}
-            {showModal && (
-              <Modal
-                src={modalImage}
-                alt={modalImage.tags}
-                onClose={this.closeModal}
-              />
-            )}
-          </ImageGallery>
+          <ImageGallery
+            images={images}
+            showModal={showModal}
+            modalImage={modalImage}
+            openModal={this.openModal}
+            closeModal={this.closeModal}
+          />
         )}
         {images.length > 0 && !isLoading && lastPage > 1 && (
           <Button addLoadMore={this.handleLoadMore} />
