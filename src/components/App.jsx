@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import css from './App.module.css';
 import { Searchbar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
@@ -7,67 +7,54 @@ import { Button } from './Button';
 import { fetchImagesByQuery } from '../FetchImage';
 import toast, { Toaster } from 'react-hot-toast';
 
-export class App extends Component {
-  state = {
-    query: '',
-    images: [],
-    page: 1,
-    isLoading: false,
-    error: false,
-    showModal: false,
-    modalImage: '',
-  };
+export function App() {
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState('');
+  const [totalHits, setTotalHits] = useState(0);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
-      this.fetchImages();
+  useEffect(() => {
+    if (query !== '' || page !== 1) {
+      fetchImages();
     }
-  }
+  }, [query, page]);
 
-  fetchImages = async () => {
+  const fetchImages = async () => {
     try {
-      this.setState({ isLoading: true, error: false });
-      const queryParts = this.state.query.split('/');
+      setIsLoading(true);
+      setError(false);
+      const queryParts = query.split('/');
       const searchQuery = queryParts[1];
-      const { hits, totalHits } = await fetchImagesByQuery(
-        searchQuery,
-        this.state.page
-      );
+      const { hits, totalHits } = await fetchImagesByQuery(searchQuery, page);
 
       if (!hits.length) {
         toast.error(
           'No images found matching your search query, please change your request and try again',
-          {
-            duration: 5000,
-          }
+          { duration: 5000 }
         );
-
         return;
       }
-      this.setState(prevState => ({
-        images: [...prevState.images, ...hits],
-        totalHits: totalHits,
-      }));
+      setImages(prevImages => [...prevImages, ...hits]);
+      setTotalHits(totalHits);
     } catch (error) {
-      this.setState({ error: true });
+      setError(true);
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  handleSearchSubmit = evt => {
+  const handleSearchSubmit = evt => {
     evt.preventDefault();
     const queryValue = evt.target.elements.query.value.trim();
     if (queryValue !== '') {
-      const query = `${Date.now()}/${queryValue}`;
-      this.setState({
-        query: query,
-        images: [],
-        page: 1,
-      });
+      const newQuery = `${Date.now()}/${queryValue}`;
+      setQuery(newQuery);
+      setImages([]);
+      setPage(1);
     } else {
       toast('Please enter your query', {
         duration: 2000,
@@ -76,48 +63,44 @@ export class App extends Component {
     }
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  openModal = image => {
-    this.setState({ showModal: true, modalImage: image });
+  const openModal = image => {
+    setShowModal(true);
+    setModalImage(image);
   };
 
-  closeModal = () => {
-    this.setState({ showModal: false, modalImage: '' });
+  const closeModal = () => {
+    setShowModal(false);
+    setModalImage('');
   };
 
-  render() {
-    const { images, isLoading, error, totalHits, showModal, modalImage } =
-      this.state;
-    const lastPage = Math.ceil(totalHits / images.length);
+  const lastPage = Math.ceil(totalHits / images.length);
 
-    return (
-      <div className={css.App}>
-        <Searchbar onSubmit={this.handleSearchSubmit} />
-        {isLoading && <Loader />}
-        {error &&
-          !isLoading &&
-          toast.error('Something went wrong, please try reloading the page', {
-            duration: 5000,
-          })}
-        {images.length > 0 && (
-          <ImageGallery
-            images={images}
-            showModal={showModal}
-            modalImage={modalImage}
-            openModal={this.openModal}
-            closeModal={this.closeModal}
-          />
-        )}
-        {images.length > 0 && !isLoading && lastPage > 1 && (
-          <Button addLoadMore={this.handleLoadMore} />
-        )}
-        <Toaster position="top-right" />
-      </div>
-    );
-  }
+  return (
+    <div className={css.App}>
+      <Searchbar onSubmit={handleSearchSubmit} />
+      {isLoading && <Loader />}
+      {error &&
+        !isLoading &&
+        toast.error('Something went wrong, please try reloading the page', {
+          duration: 5000,
+        })}
+      {images.length > 0 && (
+        <ImageGallery
+          images={images}
+          showModal={showModal}
+          modalImage={modalImage}
+          openModal={openModal}
+          closeModal={closeModal}
+        />
+      )}
+      {images.length > 0 && !isLoading && lastPage > 1 && (
+        <Button addLoadMore={handleLoadMore} />
+      )}
+      <Toaster position="top-right" />
+    </div>
+  );
 }
