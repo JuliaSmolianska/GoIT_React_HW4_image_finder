@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import css from './App.module.css';
 import { Searchbar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
@@ -16,62 +16,45 @@ export function App() {
   const [showModal, setShowModal] = useState(false);
   const [modalImage, setModalImage] = useState('');
   const [totalHits, setTotalHits] = useState(0);
-  const [buttonClick, setButtonClick] = useState(0);
-  const [isRequestCancelled, setIsRequestCancelled] = useState(false);
-
-  const controller = useRef();
 
   useEffect(() => {
     if (query !== '' || page !== 1) {
-      const fetchImages = async () => {
-        //* Якщо є попередній запит -> відмінити
-        setIsRequestCancelled(false);
-
-        if (controller.current) {
-          controller.current.abort();
-        }
-
-        //*Створити новий контроллер
-        controller.current = new AbortController();
-
-        try {
-          setIsLoading(true);
-          setError(false);
-          const { hits, totalHits } = await fetchImagesByQuery(
-            query,
-            page,
-            controller
-          );
-
-          if (!hits.length) {
-            toast.error(
-              'No images found matching your search query, please change your request and try again',
-              { duration: 5000 }
-            );
-            return;
-          }
-          setImages(prevImages => [...prevImages, ...hits]);
-          setTotalHits(totalHits);
-        } catch (error) {
-          if (error.code !== 'ERR_CANCELED') {
-            setError(true);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      };
       fetchImages();
     }
-  }, [query, page, buttonClick]);
+  }, [query, page]);
+
+  const fetchImages = async () => {
+    try {
+      setIsLoading(true);
+      setError(false);
+      const queryParts = query.split('/');
+      const searchQuery = queryParts[1];
+      const { hits, totalHits } = await fetchImagesByQuery(searchQuery, page);
+
+      if (!hits.length) {
+        toast.error(
+          'No images found matching your search query, please change your request and try again',
+          { duration: 5000 }
+        );
+        return;
+      }
+      setImages(prevImages => [...prevImages, ...hits]);
+      setTotalHits(totalHits);
+    } catch (error) {
+      setError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearchSubmit = evt => {
     evt.preventDefault();
     const queryValue = evt.target.elements.query.value.trim();
     if (queryValue !== '') {
-      setQuery(queryValue);
+      const newQuery = `${Date.now()}/${queryValue}`;
+      setQuery(newQuery);
       setImages([]);
       setPage(1);
-      setButtonClick(prevButtonClick => prevButtonClick + 1);
     } else {
       toast('Please enter your query', {
         duration: 2000,

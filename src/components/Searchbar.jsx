@@ -2,6 +2,9 @@ import css from './App.module.css';
 import { BiSearch } from 'react-icons/bi';
 
 export const Searchbar = ({ onSubmit }) => {
+  const handleInputFocus = evt => {
+    evt.target.value = '';
+  };
   return (
     <header className={css.searchbar}>
       <form className={css.search_form} onSubmit={onSubmit}>
@@ -12,6 +15,7 @@ export const Searchbar = ({ onSubmit }) => {
           autoFocus
           placeholder="Search images and photos"
           name="query"
+          onFocus={handleInputFocus}
         />
         <button type="submit" className="search_button">
           <BiSearch size={25} />
